@@ -39,8 +39,9 @@ class SjuanGameState:
         
         all_cards = [
             Card(suit, value) for suit  in CardSuit
-                              for value in CardValue 
+                              for value in CardValue
         ]
+        
         self.source_stack = CardStack(all_cards)
         self.source_stack.do(CardStackAction.STACK_SHUFFLE())
         
@@ -82,8 +83,5 @@ class SjuanGame(Game[SjuanGameState, SjuanRules]):
     def do(self, moves):
         return self.rules.do(moves, self.state)
         
-    def moves_for_card(card):
-        pass
-        
-    def suggested_moves():
-        pass
+    def moves_for_card(self, i: int):
+        return self.rules.moves_for_card(i, self.state)

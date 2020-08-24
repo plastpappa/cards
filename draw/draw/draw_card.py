@@ -42,7 +42,7 @@ class CardDrawer(RectangleShape):
         self._transparent = transparent
         self._targeted    = targeted
         self._hidden      = hidden
-        self.batch       = batch
+        self._batch       = batch
         self.group_back  = OrderedGroup(0, group)
         self.group_front = OrderedGroup(1, group)
         
@@ -58,6 +58,20 @@ class CardDrawer(RectangleShape):
         self.back              = None
         self._update()
     
+    @property
+    def batch(self):
+        return self._batch
+        
+    @batch.setter
+    def batch(self, batch):
+        self._batch = batch
+        self._update_common()
+        if self.num_label:
+            self.num_label.batch = batch
+        if self.back:
+            self.back.batch = batch
+        for label in self.sym_labels_top + self.sym_labels_bottom:
+            label.batch = batch
     
     @property
     def pos(self):

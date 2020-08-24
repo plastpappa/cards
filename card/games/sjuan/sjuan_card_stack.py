@@ -12,6 +12,9 @@ class SjuanCardStackAction:
 @adt
 class SjuanCardStackInsert:
     SJUAN_INSERT: Case
+    
+    def __str__(self):
+        return "insert"
 
 @adt
 class SjuanCardStackTake:
@@ -24,14 +27,15 @@ class SjuanCardStack(CardCollection[
     Dict[CardSuit, List[Card]]
 ]):
     def __init__(self):
+        super().__init__()
         self.cards: Dict[CardSuit, List[Card]] = {}
     
     def action_is_valid(self, move): pass
-    def do(self, move): pass
+    def _do(self, move): pass
     def take_is_valid(self, move): pass
-    def do_take(self, move): pass
-    
-    
+    def _do_take(self, move): pass
+        
+        
     def insert_is_valid(self, move: SjuanCardStackInsert, card: Card) -> bool:
         try:
             row = self.cards[card.suit]
@@ -42,7 +46,7 @@ class SjuanCardStack(CardCollection[
         except KeyError:
             return card.value == CardValue.SEVEN
     
-    def do_insert(self, move: SjuanCardStackInsert, card: Card):
+    def _do_insert(self, move: SjuanCardStackInsert, card: Card):
         try:
             row = self.cards[card.suit]
             if row[0].value - 1 == card.value:

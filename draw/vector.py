@@ -57,3 +57,6 @@ class Vector(RecordClass, Generic[T]):
         
     def __floordiv__(v: Vector[T], k: T) -> Vector[T]:
         return Vector(v.x // k, v.y // k)
+        
+    def __abs__(v: Vector[T]) -> Vector[T]:
+        return Vector(abs(v.x), abs(v.y))

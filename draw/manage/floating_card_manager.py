@@ -11,7 +11,8 @@ from draw.arrow import Arrow
 class FloatingCardManager:
     def __init__(
         self, card: Card, mouse_pos: Vector,
-        origin: Vector, on_death: Callable,
+        moves,
+        origin: Vector, on_readd: Callable, on_bye: Callable,
         batch = None, group = None
     ):
         if batch:
@@ -23,8 +24,7 @@ class FloatingCardManager:
         self.group_back  = OrderedGroup(0, group)
         self.group_front = OrderedGroup(1, group)
         
-        def div(x, y):
-            return math.copysign(math.inf, x) if y == 0 else x / y
+        self.moves = moves
         
         pos = self.position_for(mouse_pos)
         self.drawer = CardDrawer(
@@ -39,10 +39,12 @@ class FloatingCardManager:
             batch = self.batch, group = self.group_front
         )
         
-        self.origin   = origin
-        self.on_death = on_death
+        self.origin    = origin
+        self._on_readd = on_readd
+        self._on_bye   = on_bye
         
         self.redraw_change_pos = None
+        self._chosen           = None
         
     
     def position_for(self, mouse_pos: Vector):
@@ -52,13 +54,26 @@ class FloatingCardManager:
     def draw(self):
         if self.redraw_change_pos:
             pos = self.position_for(self.redraw_change_pos)
+            
+            move, pos2, k_dist = min(
+                [ (move, pos2, (pos - pos2).magnitude() ** 0.7) for move, pos2 in self.moves ],
+                key = lambda x : x[2]
+            )
+            k_dist_to_origin = (pos - self.origin).magnitude() ** 0.7
+            if k_dist >= k_dist_to_origin:
+                k_dist = k_dist_to_origin
+                self._chosen = None
+                self.arrow._posB = self.origin
+            else:
+                self._chosen = move
+                self.arrow._posB = pos2
+            
             self.drawer.pos        = pos
             self.redraw_change_pos = None
             self.arrow._posA       = pos
-            sqrt_dist = (pos - self.origin).magnitude() ** 0.7
-            self.arrow._arrow_size = 30 + sqrt_dist / 6
-            self.arrow._pad        = 2  + sqrt_dist / 3
-            self.arrow._offset     = 3  + sqrt_dist / 28
+            self.arrow._arrow_size = 30 + k_dist / 6
+            self.arrow._pad        = 2  + k_dist / 3
+            self.arrow._offset     = 3  + k_dist / 28
             self.arrow._update()
         
         if self.batch_is_own:
@@ -72,5 +87,9 @@ class FloatingCardManager:
         self.redraw_change_pos = mouse_pos
 
     def mouse_up(self, mouse_pos, button, modifiers):
-        self.on_death()
+        if self._chosen:
+            self.world.parent._game.do([ self._chosen ])
+            self._on_bye(self._chosen)
+        else:
+            self._on_readd()
         self.world.remove_object(self)

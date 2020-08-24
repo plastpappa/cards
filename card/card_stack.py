@@ -10,13 +10,22 @@ from card import Card, CardCollection
 class CardStackAction:
     STACK_SHUFFLE: Case
     
+    def __str__(self):
+        return "shuffle"
+    
 @adt
 class CardStackInsert:
     STACK_INSERT_BOTTOM: Case
+    
+    def __str__(self):
+        return "insert at bottom"
 
 @adt
 class CardStackTake:
     STACK_TAKE_TOP: Case
+    
+    def __str__(self):
+        return "take at top"
 
 class CardStack(CardCollection[
     CardStackAction, CardStackInsert, CardStackTake,
@@ -27,6 +36,7 @@ class CardStack(CardCollection[
         can_insert: bool = True, can_take: bool = True,
         allow_duplicates: bool = False
     ):
+        super().__init__()
         self.cards = cards
         self.can_insert = can_insert
         self.can_take   = can_take
@@ -38,7 +48,7 @@ class CardStack(CardCollection[
             stack_shuffle = lambda: True
         )
     
-    def do(self, move: CardStackAction):
+    def _do(self, move: CardStackAction):
         if self.action_is_valid(move):
             move.match(
                 stack_shuffle = lambda:
@@ -54,7 +64,7 @@ class CardStack(CardCollection[
             )
         )
         
-    def do_insert(self, move: CardStackInsert, card: Card):
+    def _do_insert(self, move: CardStackInsert, card: Card):
         if self.insert_is_valid(move, card):
             move.match(
                 stack_insert_bottom = lambda:
@@ -67,7 +77,7 @@ class CardStack(CardCollection[
             stack_take_top = lambda: self.can_take
         )
     
-    def do_take(self, move: CardStackTake) -> List[Card]:
+    def _do_take(self, move: CardStackTake) -> List[Card]:
         if self.take_is_valid(move):
             return move.match(
                 stack_take_top = lambda: [ self.cards.pop(0) ]

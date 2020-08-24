@@ -1,6 +1,7 @@
 from typing import List
 
 from card import *
+from card.game import *
 
 from draw.vector import Vector
 
@@ -10,11 +11,17 @@ def emit_event(objects: List[object], name: str, *args, **kwargs):
         method = getattr(object, name, None)
         if callable(method):
             method(*args, **kwargs)
-    
+
 class World:
-    def __init__(self):
+    def __init__(self, parent):
         self._objects = []
+        self._parent  = parent
     
+    
+    @property
+    def parent(self):
+        return self._parent
+        
     
     def add_object(self, object):
         self._objects.append(object)

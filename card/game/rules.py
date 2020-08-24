@@ -17,6 +17,12 @@ class Rules(ABC, Generic[Action, Insert, Take, GameState]):
     class Move:
         THE_ACTION: Case[Action]
         FROM_TO: Case[Take, Insert]
+        
+        def __str__(self):
+            return self.match(
+                the_action = lambda action:       f"action {action}",
+                from_to    = lambda take, insert: f"from {take} to {insert}"
+            )
     
     
     @classmethod
@@ -31,18 +37,15 @@ class Rules(ABC, Generic[Action, Insert, Take, GameState]):
     def move_is_valid(cls, moves: List[Move], state: GameState) -> bool:
         def from_to_valid(take, insert):
             ref_take, take_move = cls.reference(take, state)
-            state0 = deepcopy(ref_take.get_state())
-            if ref_take.take_is_valid(take_move):
-                cards = ref_take.do_take(take_move)
-                ref_take.set_state(state0)
-                
+            cards = try_take(ref_take, take_move)
+            if cards is None:
+                return False
+            else:
                 ref_insert, insert_move = cls.reference(insert, state)
                 return all(
                     ref_insert.insert_is_valid(insert_move, card)
                     for card in cards
                 )
-            else:
-                return False
         
         def action_valid(action):
             ref_action, action_move = cls.reference(action)
@@ -79,3 +82,8 @@ class Rules(ABC, Generic[Action, Insert, Take, GameState]):
     @abstractmethod
     def do(cls, move: Move, state: GameState) -> bool:
         pass
+        
+    
+    @classmethod
+    @abstractmethod
+    def suggested_moves(state: GameState): pass

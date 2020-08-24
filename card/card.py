@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from enum import Enum, auto
-from typing import List, Generic, TypeVar
+from typing import Callable, List, Generic, TypeVar, Optional
+from copy import deepcopy
+
+from lib import do_nothing
 
 
 class CardColour(Enum):
@@ -66,9 +69,9 @@ class CardValue(Enum):
             return str(self.value)
         elif self.value == 11:
             return j
-        elif self.value == 11:
-            return q
         elif self.value == 12:
+            return q
+        elif self.value == 13:
             return k
         else:
             return a
@@ -109,26 +112,65 @@ TakeAction   = TypeVar('TakeAction')
 
 CollectionState = TypeVar('CollectionState')
 
+def try_take(ref, move):
+    state0 = deepcopy(ref.get_state())
+    if ref.take_is_valid(move):
+        cards = ref._do_take(move)
+        ref.set_state(state0)
+        return cards
+    else:
+        return None
+
 class CardCollection(ABC, Generic[
     NormalAction, InsertAction, TakeAction,
     CollectionState
 ]):
+    def __init__(self):
+        self._listen_action = do_nothing
+        self._listen_insert = do_nothing
+        self._listen_take   = do_nothing
+
     @abstractmethod
     def action_is_valid(self, move: NormalAction) -> bool: pass
     @abstractmethod
-    def do(self, move: NormalAction): pass
+    def _do(self, move: NormalAction): pass
     
     @abstractmethod
     def insert_is_valid(self, move: InsertAction, card: Card) -> bool: pass
     @abstractmethod
-    def do_insert(self, move: InsertAction, card: Card): pass
+    def _do_insert(self, move: InsertAction, card: Card): pass
     
     @abstractmethod
     def take_is_valid(self, move: TakeAction) -> bool: pass
     @abstractmethod
-    def do_take(self, move: TakeAction) -> List[Card]: pass
+    def _do_take(self, move: TakeAction) -> List[Card]: pass
+    
     
     @abstractmethod
     def get_state(self) -> CollectionState: pass
     @abstractmethod
     def set_state(self, state: CollectionState): pass
+        
+        
+    def do(self, move: NormalAction):
+        self._listen_action(move)
+        return self._do(move)
+    def do_insert(self, move: InsertAction, card: Card):
+        self._listen_insert(move, card)
+        return self._do_insert(move, card)
+    def do_take(self, move: TakeAction) -> List[Card]:
+        self._listen_take(move)
+        return self._do_take(move)
+    
+    def listen(
+        self,
+        on_action: Optional[Callable[[NormalAction],       None]] = None,
+        on_insert: Optional[Callable[[InsertAction, Card], None]] = None,
+        on_take:   Optional[Callable[[TakeAction],         None]] = None
+    ):
+        if on_action:
+            self._listen_action = on_action
+        if on_insert:
+            self._listen_insert = on_insert
+        if on_take:
+            self._listen_take = on_take

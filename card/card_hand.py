@@ -3,6 +3,7 @@ from typing import List, Optional
 from adt import adt, Case
 
 from card import Card, CardCollection
+from lib import do_nothing
 
 
 @adt
@@ -12,10 +13,20 @@ class CardHandAction:
 @adt
 class CardHandInsert:
     HAND_INSERT: Case[int]
+    
+    def __str__(self):
+        return self.match(
+            hand_insert = lambda n: f"insert at {n}"
+        )
 
 @adt
 class CardHandTake:
     HAND_TAKE: Case[int]
+    
+    def __str__(self):
+        return self.match(
+            hand_take = lambda n: f"take from {n}"
+        )
 
 class CardHand(CardCollection[
     CardHandAction, CardHandInsert, CardHandTake,
@@ -27,16 +38,17 @@ class CardHand(CardCollection[
         min_cards: Optional[int] = None,
         max_cards: Optional[int] = None
     ):
+        super().__init__()
         self.cards = cards
         self.allow_duplicates = allow_duplicates
         self.min_cards = min_cards
         self.max_cards = max_cards
     
-
+    
     def action_is_valid(self, move: CardHandAction):
         return True
     
-    def do(self, move: CardHandAction):
+    def _do(self, move: CardHandAction):
         pass
             
                 
@@ -49,7 +61,7 @@ class CardHand(CardCollection[
                      or len(self.cards) <= self.max_cards - 1)
         )
         
-    def do_insert(self, move: CardHandInsert, card: Card):
+    def _do_insert(self, move: CardHandInsert, card: Card):
         if self.insert_is_valid(move, card):
             move.match(
                 hand_insert = lambda i:
@@ -59,16 +71,16 @@ class CardHand(CardCollection[
     
     def take_is_valid(self, move: CardHandTake) -> bool:
         return move.match(
-            hand_remove = lambda i:
+            hand_take = lambda i:
                 i >= 0 and i < len(self.cards)
                 and (self.min_cards is None
                      or len(self.cards) >= self.min_cards + 1)
         )
             
-    def do_take(self, move: CardHandTake) -> List[Card]:
-        if self.take_is_valid(self, move):
+    def _do_take(self, move: CardHandTake) -> List[Card]:
+        if self.take_is_valid(move):
             return move.match(
-                hand_remove = lambda i: [ self.cards.pop(i) ]
+                hand_take = lambda i: [ self.cards.pop(i) ]
             )
         else:
             return []

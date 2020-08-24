@@ -58,7 +58,7 @@ class SjuanRules(Rules[
             if len(moves) == 1:
                 # Accept the player whose turn it is giving a card to the stack
                 # or said player simply rearranging their own cards
-                def from_to():
+                def from_to(take, insert):
                     take_valid = take.match(
                         src_stack = const(False),
                         player    = lambda i, _: i == turn_i
@@ -78,8 +78,8 @@ class SjuanRules(Rules[
                     else:
                         return SjuanRules.InvalidMove()
                     
-                moves[0].match(
-                    the_action = const(InvalidMove()),
+                return moves[0].match(
+                    the_action = const(SjuanRules.InvalidMove()),
                     from_to    = from_to
                 )
             elif len(moves) == cls.NUM_CARDS_TO_TAKE:
@@ -159,3 +159,34 @@ class SjuanRules(Rules[
         )
         
         return True
+        
+    
+    @classmethod
+    def suggested_moves(cls): pass
+
+    @classmethod
+    def moves_for_card(cls, i: int, state: SjuanGameState):
+        curr_player_i = state.turn_index()
+        curr_player   = state.players[curr_player_i]
+        take_move = SjuanTake.PLAYER(curr_player_i, CardHandTake.HAND_TAKE(i))
+        
+        moves = []
+        
+        def add_move(insert):
+            moves.append((
+                SjuanRules.Move.FROM_TO(take_move, insert),
+                take_move, insert
+            ))
+            
+        for j in range(len(curr_player.cards)):
+            if i != j:
+                add_move(SjuanInsert.PLAYER(
+                    curr_player_i, CardHandInsert.HAND_INSERT(j)
+                ))
+        
+        card = curr_player.cards[i]
+        move = SjuanCardStackInsert.SJUAN_INSERT()
+        if state.sjuan_stack.insert_is_valid(move, card):
+            add_move(SjuanInsert.SJUAN_STACK(move))
+        
+        return moves

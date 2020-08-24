@@ -66,7 +66,7 @@ class Arrow:
         self._delete_line()
         
         def div(x, y):
-            return math.copysign(math.inf, x) if y == 0 else x / y
+            return math.copysign(1000000000, x) if y == 0 else x / y
             
         d  = self._posB - self._posA
         k  = div(d.y, d.x)
