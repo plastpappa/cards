@@ -14,7 +14,6 @@ from draw.vector import Vector
 
 
 game = SjuanGame(num_players = 2)
-game.do(game.state.queue)
     
 def main():
     font.add_directory(FONT_DIR)

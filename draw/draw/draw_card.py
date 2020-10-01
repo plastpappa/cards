@@ -155,11 +155,10 @@ class CardDrawer(RectangleShape):
                    else CardDrawer.OUTLINE_COLOUR_NORMAL)
         
         self.outline = RectOutline(
-            *self.bottom_left, *self.size,
-            color = colour, stroke_width = 2,
+            self,  # Since we inherit from RectangleShape
+            colour = (*colour, self.opacity), stroke_width = 2,
             batch = self.batch, group = self.group_back
         )
-        self.outline.opacity = self.opacity
             
     def _update_hidden(self):
         self.back = sprite.Sprite(
@@ -284,7 +283,7 @@ class CardDrawer(RectangleShape):
         
         self.rect.draw()
         self.outline.draw()
-        for label in self.sym_labels:
+        for label in self.sym_labels_top + self.sym_labels_bottom:
             label.draw()
         if self.num_label:
             self.num_label.draw()

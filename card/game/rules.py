@@ -48,8 +48,11 @@ class Rules(ABC, Generic[Action, Insert, Take, GameState]):
                 )
         
         def action_valid(action):
-            ref_action, action_move = cls.reference(action)
-            return ref_action.action_is_valid(action_move)
+            ref_action, action_move = cls.reference(action, state)
+            if ref_action:
+                return ref_action.action_is_valid(action_move)
+            else:
+                return True
             
         return all(
             move.match(
@@ -70,7 +73,8 @@ class Rules(ABC, Generic[Action, Insert, Take, GameState]):
         
         def the_action(action):
             action_ref, action_move = cls.reference(action, state)
-            action_ref.do(action_move)
+            if action_ref:
+                action_ref.do(action_move)
         
         move.match(
             the_action = the_action,

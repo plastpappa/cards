@@ -64,6 +64,14 @@ class CardValue(Enum):
     KING  = 13
     ACE   = 14
     
+    
+    def adj_value(self, aces_lowest: bool = False):
+        if aces_lowest and self == CardValue.ACE:
+            return 1
+        else:
+            return self.value
+
+    
     def _name(self, j: str, q: str, k: str, a: str) -> str:
         if self.value <= 10:
             return str(self.value)
@@ -76,15 +84,19 @@ class CardValue(Enum):
         else:
             return a
     
-    def __add__(self, n) -> str:
-        return CardValue((self.value + n - 2) % 13 + 2)
-    
     def name_short(self) -> str:
         return self._name("J", "Q", "K", "A")
         
     def name_long(self) -> str:
         return self._name("Jack", "Queen", "King", "Ace")
     
+    
+    def __add__(self, n):
+        return CardValue((self.value + n - 2) % 13 + 2)
+    
+    def __sub__(self, n):
+        return self + (-n)
+            
     def __str__(self):
         return self.name_short()
 
@@ -153,14 +165,17 @@ class CardCollection(ABC, Generic[
         
         
     def do(self, move: NormalAction):
+        res = self._do(move)
         self._listen_action(move)
-        return self._do(move)
+        return res
     def do_insert(self, move: InsertAction, card: Card):
+        res = self._do_insert(move, card)
         self._listen_insert(move, card)
-        return self._do_insert(move, card)
+        return res
     def do_take(self, move: TakeAction) -> List[Card]:
+        res = self._do_take(move)
         self._listen_take(move)
-        return self._do_take(move)
+        return res
     
     def listen(
         self,

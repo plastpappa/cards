@@ -11,6 +11,7 @@ class LabelWithBackground(txt.Label):
                  colour = (255, 255, 255, 255),
                  background_colour = (0, 0, 0, 128),
                  background_padding = Vector(6, 6),
+                 background_bounds = None,
                  pos = Vector(0, 0), size = Vector(None, None),
                  anchor_x = 'left', anchor_y = 'baseline',
                  align = 'left',
@@ -25,6 +26,7 @@ class LabelWithBackground(txt.Label):
         self._pos                = pos
         self._background_color   = background_colour
         self._background_padding = background_padding
+        self._background_bounds  = background_bounds
         
         self.bg_draw = None
         self._update_bg()
@@ -59,11 +61,14 @@ class LabelWithBackground(txt.Label):
         
     @property
     def bounds(self):
-        text_bounds = self.text_bounds
-        return RectangleShape(
-            bottom_left = text_bounds.bottom_left - self._background_padding,
-            size        = text_bounds.size + self._background_padding * 2
-        )
+        if self._background_bounds:
+            return self._background_bounds
+        else:
+            text_bounds = self.text_bounds
+            return RectangleShape(
+                bottom_left = text_bounds.bottom_left - self._background_padding,
+                size        = text_bounds.size + self._background_padding * 2
+            )
     
     
     def _update_bg(self):

@@ -14,8 +14,13 @@ class SjuanStackManager:
     ):
         self._sjuan_stack = sjuan_stack
         self._pos = pos
-        
         self._drawer = SjuanStackDrawer(self._sjuan_stack, self._pos)
+        
+        self._sjuan_stack.listen(
+            on_insert = lambda insert, card: insert.match(
+                sjuan_insert = lambda: self._card_inserted(card)
+            )
+        )
         
     
     @property
@@ -26,3 +31,11 @@ class SjuanStackManager:
     def pos(self, pos):
         self._pos = pos
         self._drawer.pos = pos
+        
+        
+    def _card_inserted(self, card):
+        self._drawer._card_inserted(card)
+        
+    
+    def draw(self):
+        self._drawer.draw()

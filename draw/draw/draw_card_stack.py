@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from pyglet import shapes as shp, text as txt, font
 from pyglet.graphics import Batch
 
@@ -18,7 +20,7 @@ class CardStackDrawer:
         batch = None, group = None
     ):
         self._pos   = pos
-        self._cards = cards
+        self._cards = deepcopy(cards)
         self._label = label
         self._top_hidden = top_hidden
         if batch is None:
@@ -40,13 +42,16 @@ class CardStackDrawer:
         
     @cards.setter
     def cards(self, cards):
-        lens_diff = not (len(self._cards) == len(cards))
+        old_cards_len = len(self._cards)
+        self._cards = deepcopy(cards)
+        lens_diff = old_cards_len != len(cards)
+        
         if lens_diff:
             self._update_label()
+        
         if ((not self._top_hidden and cards[0] != self._cards[0])
-           or (lens_diff and (len(cards) == 0 or len(self._cards) == 0))):
+           or (lens_diff and (len(cards) == 0 or old_cards_len == 0))):
             self._update_card_draw()
-        self._cards = cards
     
             
     def _update_card_draw(self):

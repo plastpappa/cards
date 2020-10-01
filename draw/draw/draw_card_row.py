@@ -51,10 +51,14 @@ class CardRowDrawer:
         self._etc_right    = None
         self._n_displayed  = None
         self._bounds_inner = None
+        self._update()
+    
+    def _update(self):
         self._update_displayed_cards()
         self._update_cards()
         self._update_top_labels()
         if len(self._cards) > self._row_size:
+            self._delete_etc_right()
             self._add_etc_right()
     
     
@@ -154,21 +158,19 @@ class CardRowDrawer:
             return
         if self._offset == 0:
             self._add_etc_left()
-            
+        
+        old_offset = self._offset
         self._offset += 1
         if self._offset == self.max_offset:
-            print("DELETING OFFSET RIGHT")
             self._delete_etc_right()
-        else:
-            print("WON'T DELETE OFFSET RIGHT", self._offset, self.max_offset)
         
         delta = Vector(self.delta().x, 0)
-        new_i = self._offset + self._n_displayed - 1
+        new_i = old_offset + self._n_displayed
         pos_last = self.nth_card(new_i - 1).pos.copy()
         for card_draw in self._card_draws:
             card_draw.pos -= delta
             
-        self.nth_card(self._offset - 1).batch = None
+        self.nth_card(old_offset).batch = None
         
         new_card = self.nth_card(new_i)
         if new_card:
@@ -182,7 +184,6 @@ class CardRowDrawer:
         if self._offset == 0:
             return
         if self._offset == self.max_offset:
-            print("DECR OFFSET: ADD ETC RIGHT")
             self._add_etc_right()
             
         self._offset -= 1
@@ -216,6 +217,7 @@ class CardRowDrawer:
             
             self._cards.insert(i, card)
             self._update_top_labels()
+            self._update_displayed_cards()
             
             # If we're adding to the very end, we need to increment the offset
             # so that we can actually see our newly added card
@@ -223,15 +225,19 @@ class CardRowDrawer:
                 self.incr_offset()
         
         card_i = self.nth_index(i)
-        if card_i >= len(self._card_draws):
+        if len(self._card_draws) != 0 and card_i >= len(self._card_draws):
             return final()
         
         delta = Vector(self.delta().x, 0)
-        insert_at = self._card_draws[card_i].pos.copy()
+        if len(self._card_draws) == 0:
+            insert_at = self.cards_start_pos
+        else:
+            insert_at = self._card_draws[card_i].pos.copy()
+            list(self.displayed_cards())[-1].batch = None
+        
         for card_draw in self._card_draws[card_i:]:
             card_draw.pos += delta
         
-        list(self.displayed_cards())[-1].batch = None
         self._card_draws.insert(card_i, self._make_card_drawer(
             card, insert_at
         ))
@@ -240,7 +246,6 @@ class CardRowDrawer:
         
         if self._offset > 0:
             # Dirty hack
-            print("...")
             self.decr_offset()
             self.incr_offset()
         
@@ -402,7 +407,6 @@ class CardRowDrawer:
             font_name = 'Source Code Pro', bold = True, font_size = 16,
             batch = self._batch, group = self._group
         )
-        print("add etc right:", self._etc_right)
     
     
     def _delete_cards(self):
@@ -417,13 +421,12 @@ class CardRowDrawer:
     
     def _delete_etc_left(self):
         if self._etc_left:
+            self._etc_left.batch = None
             self._etc_left.delete()
             self._etc_left = None
             
     def _delete_etc_right(self):
-        print("etc right =", self._etc_right)
         if self._etc_right:
-            print("delete lol")
             self._etc_right.batch = None
             self._etc_right.delete()
             self._etc_right = None

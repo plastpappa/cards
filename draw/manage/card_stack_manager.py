@@ -10,8 +10,19 @@ class CardStackManager:
         interactable: bool = True
     ):
         self._stack  = stack
+        self._pos    = pos
+        self._label  = label
         self._drawer = CardStackDrawer(stack.cards, pos, label)
         self._interactable = interactable
+        
+        self._stack.listen(
+            on_insert = lambda _, __: self._update_cards(),
+            on_take   = lambda _:     self._update_cards()
+        )
+    
+    
+    def _update_cards(self):
+        self._drawer.cards = self._stack.cards
         
     
     def draw(self):
