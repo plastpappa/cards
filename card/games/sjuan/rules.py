@@ -42,12 +42,12 @@ class SjuanRules(Rules[
                     (None, None) if i is None
                     else (state.players[i], m)
             )
-        
+
         return None
-    
-    
+
+
     NUM_CARDS_TO_TAKE = 3
-    
+
     class MoveInfo(RecordClass):
         is_valid:      bool
         is_effectful:  bool = False
@@ -58,7 +58,7 @@ class SjuanRules(Rules[
         return SjuanRules.MoveInfo(False, False, False, None)
     def ValidMove(**kwargs):
         return SjuanRules.MoveInfo(True, **kwargs)
-    
+
     @classmethod
     def move_info(
         cls, moves: List[SjuanRules.Move], state: SjuanGameState
@@ -77,7 +77,7 @@ class SjuanRules(Rules[
                         cards = try_take(ref_take, take_move)
                         assert len(cards) == 1
                         card = cards[0]
-                        
+
                         return insert.match(
                             # Entering a card into the stack is always ok
                             sjuan_stack = const(
@@ -100,7 +100,7 @@ class SjuanRules(Rules[
                         )
                     else:
                         return SjuanRules.InvalidMove()
-                
+
                 def the_action(action):
                     return action.match(
                         skip = const(
@@ -114,44 +114,44 @@ class SjuanRules(Rules[
                             else SjuanRules.InvalidMove()
                         )
                     )
-                
+
                 return moves[0].match(
                     the_action = the_action,
                     from_to    = from_to
                 )
             else:
                 return SjuanRules.InvalidMove()
-        
+
         def give_cards(turn_i, n):
             if len(moves) == 1:
                 move = moves[0]
-                
+
                 def to_next():
                     if n == 0:
                         return SjuanRules.InvalidMove()
                     else:
                         return SjuanRules.ValidMove(ends_turn = True)
-                
+
                 def to_self():
                     return SjuanRules.ValidMove(ends_turn = False)
-                
+
                 return move.match(
-                    the_action = const(False),
+                    the_action = const(SjuanRules.InvalidMove()),
                     from_to    = lambda take, insert:
                         take.match(
-                            src_stack = const(False),
-                            myself    = const(True)
-                        ) and insert.match(
-                            sjuan_stack = const(False),
-                            player = lambda i, _:
-                                to_next() if i == state.turn_incr(turn_i, 1)
-                                else (to_self() if i == turn_i
-                                      else False)
-                        )
-                )
+                            src_stack = const(SjuanRules.InvalidMove()),
+                            myself    = const(insert.match(
+                                sjuan_stack = const(SjuanRules.InvalidMove()),
+                                player = lambda i, _:
+                                    to_next() if i == state.turn_incr(turn_i, 1)
+                                    else (to_self() if i == turn_i
+                                          else SjuanRules.InvalidMove())
+                           ))
+                       )
+               )
             else:
                 return SjuanRules.InvalidMove()
-        
+
         info = state.phase.match(
           do_queue = lambda _: SjuanRules.MoveInfo(
             is_valid  = deque(islice(state.queue, 0, len(moves))) == moves,
@@ -162,25 +162,25 @@ class SjuanRules(Rules[
         )
         info.is_valid = info.is_valid and super().move_is_valid(moves, state)
         return info
-    
+
     @classmethod
     def move_is_valid(
         cls, moves: List[SjuanRules.Move], state: SjuanGameState
     ) -> bool:
         return cls.move_info(moves, state).is_valid
-    
-    
+
+
     @classmethod
     def do(cls, moves: List[SjuanRules.Move], state: SjuanGameState) -> bool:
         info = cls.move_info(moves, state)
         if not info.is_valid:
             return False
-        
+
         def do_moves(after_each = do_nothing, at_end = do_nothing):
             for move in list(moves):
                 cls._do(move, state)
                 after_each()
-            
+
             if info.also_do is not None:
                 info.also_do()
             at_end()
@@ -190,13 +190,13 @@ class SjuanRules(Rules[
                 state.can_skip = info.set_skippable
             if info.is_effectful:
                 state.can_succumb = False
-        
+
         def finish_turn():
             i = state.turn_index()
             if i is not None and len(state.players[i].cards) == 0:
                 # This player just won!
-                state.remove_player(i)
-        
+                state.player_won(i)
+
         state.phase.match(
             do_queue = lambda _: do_moves(
                 after_each = state.queue.popleft, at_end = finish_turn
@@ -208,10 +208,10 @@ class SjuanRules(Rules[
                 at_end = finish_turn
             )
         )
-        
+
         return True
-        
-    
+
+
     @classmethod
     def suggested_moves(cls): pass
 
@@ -220,41 +220,41 @@ class SjuanRules(Rules[
         curr_player_i = state.turn_index()
         curr_player   = state.players[curr_player_i]
         take_move     = SjuanTake.MYSELF(CardHandTake.HAND_TAKE(i))
-        
+
         moves = []
-        
+
         def add_move(insert):
             moves.append((
                 SjuanRules.Move.FROM_TO(take_move, insert),
                 take_move, insert
             ))
-        
+
         for j in range(len(curr_player.cards)):
             # Inserts back into our own hand - always valid
             if i != j:
                 add_move(SjuanInsert.PLAYER(
                     curr_player_i, CardHandInsert.HAND_INSERT(j)
                 ))
-            
+
             def player_turn():
                 # Inserts into stack
                 card = curr_player.cards[i]
                 move = SjuanCardStackInsert.SJUAN_INSERT()
                 if state.sjuan_stack.insert_is_valid(move, card):
                     add_move(SjuanInsert.SJUAN_STACK(move))
-                    
+
             def give_cards():
                 # Inserts into next player's hands
                 next_player_i = state.turn_incr(curr_player_i, 1)
                 add_move(SjuanInsert.PLAYER(
                     next_player_i, CardHandInsert.HAND_INSERT(0)
                 ))
-                
+
             state.phase.match(
                 do_queue    = do_nothing,
                 player_turn = lambda _: player_turn(),
                 give_cards  = lambda _, __: give_cards()
             )
-            
-        
+
+
         return moves

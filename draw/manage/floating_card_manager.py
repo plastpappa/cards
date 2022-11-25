@@ -23,38 +23,38 @@ class FloatingCardManager:
             self.batch_is_own = True
         self.group_back  = OrderedGroup(0, group)
         self.group_front = OrderedGroup(1, group)
-        
+
         self.moves = moves
-        
+
         pos = self.position_for(mouse_pos)
         self.drawer = CardDrawer(
             card, pos, targeted = True,
             batch = self.batch, group = self.group_back
         )
-        
+
         self.arrow = Arrow(
             pos, origin,
             colour = (126, 178, 212, 168), stroke_width = 3,
             arrow_size = 0, pad = 0, offset = 0,
             batch = self.batch, group = self.group_front
         )
-        
+
         self.origin    = origin
         self._on_readd = on_readd
         self._on_bye   = on_bye
-        
+
         self.redraw_change_pos = None
         self._chosen           = None
-        
-    
+
+
     def position_for(self, mouse_pos: Vector):
         return mouse_pos + Vector(0, 4 - CardDrawer.CARD_SIZE.y // 2)
-        
-    
+
+
     def draw(self):
         if self.redraw_change_pos:
             pos = self.position_for(self.redraw_change_pos)
-            
+
             move, pos2, k_dist = min(
                 [ (move, pos2, (pos - pos2).magnitude() ** 0.7) for move, pos2 in self.moves ],
                 key = lambda x : x[2]
@@ -67,7 +67,7 @@ class FloatingCardManager:
             else:
                 self._chosen = move
                 self.arrow._posB = pos2
-            
+
             self.drawer.pos        = pos
             self.redraw_change_pos = None
             self.arrow._posA       = pos
@@ -75,14 +75,14 @@ class FloatingCardManager:
             self.arrow._pad        = 2  + k_dist / 3
             self.arrow._offset     = 3  + k_dist / 28
             self.arrow._update()
-        
+
         if self.batch_is_own:
             self.batch.draw()
         else:
             self.drawer.draw()
             self.line.draw()
 
-        
+
     def mouse_at(self, mouse_pos, delta, button, modifiers):
         self.redraw_change_pos = mouse_pos
 
