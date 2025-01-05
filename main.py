@@ -1,5 +1,4 @@
 import sys
-from yaml import load, Loader
 
 from pyglet import font
 from pyglet.window import Window
@@ -8,24 +7,25 @@ from international import FONT_DIR
 from draw.vector import Vector
 
 import main_play
-import main_train
 
 
-def main(type):
-    config = load(open('config.yaml', 'r'), Loader = Loader)
-    font.add_directory(FONT_DIR)
-
-    WINDOW_SIZE = Vector(*(config['window']['size']))
-    window = Window(WINDOW_SIZE.x, WINDOW_SIZE.y, caption = config['window']['title'])
-
-    if type == 'play':
-        main_play.main(config, window, WINDOW_SIZE)
-    elif type == 'train':
-        main_train.main(config, window, WINDOW_SIZE)
-    else:
-        raise ValueError(f'Invalid argument "type": should be "play" or "train", got "{type}"')
+def get_default_players(num_players: int):
+    return [ { 'name': f"Player {n+1}", 'type': 'human' } for n in range(num_players) ]
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        raise ValueError('Please provide a command-line argument specifying whether to play or train')
-    main(sys.argv[1])
+    args = sys.argv[1:]
+    
+    font.add_directory(FONT_DIR)
+
+    WINDOW_SIZE = Vector(920, 640)
+    window = Window(WINDOW_SIZE.x, WINDOW_SIZE.y, caption = 'Cards')
+
+    if len(args) > 0:
+        try:
+            players = get_default_players(num_players = int(args[0]))
+        except (IndexError, ValueError):
+            players = [ { 'name': name, 'type': 'human' } for name in args ]
+    else:
+        players = get_default_players(num_players = 4)
+
+    main_play.main(players, window, WINDOW_SIZE)

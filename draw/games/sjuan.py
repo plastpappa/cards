@@ -54,7 +54,7 @@ class Sjuan:
             for i, player in enumerate(game.state.players):
                 player_config = players[i]
                 manager = CardHandManager(
-                    player, Vector(0, 0), label = "Spelare"
+                    player, Vector(0, 0), label = "Player"
                 )
                 self._player_managers.append(manager)
                 self._world.add_object(manager)
@@ -70,7 +70,7 @@ class Sjuan:
                     self._bots.append(None)
 
             self._advance_turn_button = ButtonManager(
-                "Nästa tur", font_size = 11,
+                "Next turn", font_size = 11,
                 bounds = RectangleShape(
                     centre = self._bounds.centre - Vector(0, 80),
                     size   = Vector(160, 34)
@@ -158,7 +158,7 @@ class Sjuan:
                         cards_bounds = curr_player._drawer._bounds_inner
                         size         = Vector(130, 18)
                         self._skip_turn_button = ButtonManager(
-                            "Hoppa över", font_size = 10,
+                            "Skip turn", font_size = 10,
                             bounds = RectangleShape(
                                 bottom_left = (
                                     cards_bounds.bottom_right
@@ -194,7 +194,7 @@ class Sjuan:
                     cards_bounds = prev_player._drawer._bounds_inner
                     size         = Vector(130, 18)
                     self._ask_cards_button = ButtonManager(
-                        "Be om kort", font_size = 10,
+                        "Ask for cards", font_size = 10,
                         bounds = RectangleShape(
                             bottom_left = (
                                 cards_bounds.bottom_right
@@ -240,14 +240,13 @@ class Sjuan:
     def player_name(self, index, is_active):
         try:
             name = self.game.player_names[index]
-        except (TypeError, IndexError) as err:
-            name = f"Spelare {index + 1}"
-        return name + (" (din tur)" if is_active else "")
+        except (TypeError, IndexError):
+            name = f"Player {index + 1}"
+        return name + (" (your turn)" if is_active else "")
 
     def _player_amount_changed(self):
         if self.graphical:
             PAD = 44
-            pi = math.pi
 
             num_ps = len(self._game.state.players)
             if num_ps == 1:
@@ -306,8 +305,8 @@ class Sjuan:
 
             self._advance_turn_button.label = next_phase.match(
                 do_queue    = const(""),  # Never two queues in a row, so..
-                player_turn = const("Nästa tur"),
-                give_cards  = const("Ge kort")
+                player_turn = const("Next turn"),
+                give_cards  = const("Give cards")
             )
 
             self._world.add_object(self._advance_turn_button)

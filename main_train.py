@@ -212,7 +212,7 @@ def main(config, window, WINDOW_SIZE):
             print(p + f'Num matches:    {avg_badskips[real_i].num}')
         print('')
         t_final = time.time()
-        print(f'Elapsed time: {t_final - t0}s ({time_init} / {time_decisions} / {} / {time_doing}')
+        print(f'Elapsed time: {t_final - t0}s ({time_init} / {time_decisions} / - / {time_doing}')
         print('\n')
 
         if its % 300 == 0:

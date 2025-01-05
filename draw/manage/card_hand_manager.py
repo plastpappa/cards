@@ -141,7 +141,7 @@ class CardHandManager:
         size = Vector(106, 18)
 
         self._button_sort = ButtonManager(
-            "Sortera",
+            "Sort",
             RectangleShape(
                 bottom_left = (
                     self._drawer._bounds_inner.bottom_right

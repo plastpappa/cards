@@ -372,7 +372,7 @@ class CardRowDrawer:
         self._delete_top_labels()
 
         info = LabelWithBackground(
-            f"{len(self._cards)} kort",
+            f"{len(self._cards)} cards",
             colour = CardRowDrawer.TEXT_COLOUR,
             background_colour = CardRowDrawer.LABEL_BG_COLOUR,
             background_padding = CardRowDrawer.LABEL_BG_PADDING,

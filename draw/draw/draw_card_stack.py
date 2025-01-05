@@ -68,7 +68,7 @@ class CardStackDrawer:
         
         if self._label:
             info = LabelWithBackground(
-                f"{len(self._cards)} kort",
+                f"{len(self._cards)} cards",
                 colour = CardStackDrawer.TEXT_COLOUR,
                 background_colour = CardStackDrawer.LABEL_BG_COLOUR,
                 background_padding = CardStackDrawer.LABEL_BG_PADDING,
